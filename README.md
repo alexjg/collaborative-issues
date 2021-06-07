@@ -13,8 +13,8 @@ Options:
   --help            display usage information
 
 Commands:
-  create            Create a new collaborative object
-  get               Retrieve a collaborative object
+  create            Create a new issue
+  get               Retrieve an issue
   add-comment       Add a comment to an issue
   list              List issues
   changegraph       Output graphviz formatted description of the change graph

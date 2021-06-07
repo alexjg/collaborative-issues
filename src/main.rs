@@ -40,7 +40,7 @@ enum Command {
     ChangeGraph(ChangeGraph),
 }
 
-/// Create a new collaborative object
+/// Create a new issue
 #[derive(FromArgs, Debug, PartialEq)]
 #[argh(subcommand, name = "create")]
 struct Create {
@@ -52,7 +52,7 @@ struct Create {
     description: String,
 }
 
-/// Retrieve a collaborative object
+/// Retrieve an issue
 #[derive(FromArgs, Debug, PartialEq)]
 #[argh(subcommand, name = "get")]
 struct Retrieve {
