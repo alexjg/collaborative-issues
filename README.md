@@ -1,8 +1,7 @@
 # Collaborative Issues
 
 This is an example application to test drive the implementation of the
-[collaborative issues RFC](https://github.com/radicle-dev/radicle-link.git) for
-[Radicle](Radicle).
+[collaborative issues RFC](https://github.com/radicle-dev/radicle-link.git) for Radicle.
 
 ```
 Usage: issues --project-urn <project-urn> <command> [<args>]
