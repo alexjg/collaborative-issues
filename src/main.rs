@@ -23,6 +23,9 @@ use std::{
 /// Interact with radicle collaborative objects
 #[derive(FromArgs, PartialEq, Debug)]
 struct Args {
+    /// the project to create the new object into
+    #[argh(option)]
+    project_urn: Urn,
     #[argh(subcommand)]
     command: Command,
 }
@@ -34,15 +37,13 @@ enum Command {
     Retrieve(Retrieve),
     AddComment(AddComment),
     List(List),
+    ChangeGraph(ChangeGraph),
 }
 
 /// Create a new collaborative object
 #[derive(FromArgs, Debug, PartialEq)]
 #[argh(subcommand, name = "create")]
 struct Create {
-    /// the project to create the new object into
-    #[argh(option)]
-    project_urn: Urn,
     /// the title of the issue
     #[argh(option)]
     title: String,
@@ -55,9 +56,6 @@ struct Create {
 #[derive(FromArgs, Debug, PartialEq)]
 #[argh(subcommand, name = "get")]
 struct Retrieve {
-    /// the project the object is in
-    #[argh(option)]
-    project_urn: Urn,
     /// the ID of the issue
     #[argh(option)]
     issue_id: ObjectId,
@@ -67,9 +65,6 @@ struct Retrieve {
 #[derive(FromArgs, Debug, PartialEq)]
 #[argh(subcommand, name = "add-comment")]
 struct AddComment {
-    /// the project the object is in
-    #[argh(option)]
-    project_urn: Urn,
     /// the ID of the object
     #[argh(option)]
     issue_id: ObjectId,
@@ -81,10 +76,15 @@ struct AddComment {
 /// List issues
 #[derive(FromArgs, Debug, PartialEq)]
 #[argh(subcommand, name = "list")]
-struct List {
-    /// the project to create the new object into
+struct List {}
+
+/// Output graphviz formatted description of the change graph for an issue
+#[derive(FromArgs, Debug, PartialEq)]
+#[argh(subcommand, name = "changegraph")]
+struct ChangeGraph {
+    /// the ID of the issue
     #[argh(option)]
-    project_urn: Urn,
+    issue_id: ObjectId,
 }
 
 const SCHEMA_JSON_BYTES: &[u8; 607] = std::include_bytes!("./schema.json");
@@ -105,30 +105,23 @@ fn main() {
     let local_id = local::default(&storage).unwrap().unwrap();
 
     match args.command {
-        Command::Create(Create {
-            project_urn,
-            title,
-            description,
-        }) => {
+        Command::Create(Create { title, description }) => {
             let store = storage.collaborative_objects();
             let author = local_id.urn();
             store
                 .create_object(NewObjectSpec {
                     message: Some("create issue".to_string()),
                     typename: TYPENAME.to_string(),
-                    project_urn,
+                    project_urn: args.project_urn,
                     schema_json: SCHEMA_JSON.clone(),
                     history: initial_doc(author, title, description),
                 })
                 .unwrap();
         }
-        Command::Retrieve(Retrieve {
-            project_urn,
-            issue_id,
-        }) => {
+        Command::Retrieve(Retrieve { issue_id }) => {
             let store = storage.collaborative_objects();
             let object = store
-                .retrieve_object(&project_urn, &TYPENAME, &issue_id)
+                .retrieve_object(&args.project_urn, &TYPENAME, &issue_id)
                 .unwrap();
             if let Some(object) = object {
                 match object.history() {
@@ -136,21 +129,20 @@ fn main() {
                         let backend = automerge::Backend::load(bytes.clone()).unwrap();
                         let mut frontend = automerge::Frontend::new();
                         frontend.apply_patch(backend.get_patch().unwrap()).unwrap();
-                        println!("{}", serde_json::to_string(frontend.state()).unwrap());
+                        println!(
+                            "{}",
+                            serde_json::to_string(&frontend.state().to_json()).unwrap()
+                        );
                     }
                 }
             } else {
                 println!("No object found");
             }
         }
-        Command::AddComment(AddComment {
-            project_urn,
-            issue_id,
-            comment,
-        }) => {
+        Command::AddComment(AddComment { issue_id, comment }) => {
             let store = storage.collaborative_objects();
             let object = store
-                .retrieve_object(&project_urn, &TYPENAME, &issue_id)
+                .retrieve_object(&args.project_urn, &TYPENAME, &issue_id)
                 .unwrap();
             if let Some(object) = object {
                 match object.history() {
@@ -186,7 +178,7 @@ fn main() {
                         backend.apply_changes(vec![change.clone()]).unwrap();
                         store
                             .update_object(
-                                &project_urn,
+                                &args.project_urn,
                                 &TYPENAME,
                                 &issue_id,
                                 History::Automerge(change.raw_bytes().to_vec()),
@@ -200,9 +192,11 @@ fn main() {
                 println!("No object found");
             }
         }
-        Command::List(List { project_urn }) => {
+        Command::List(List {}) => {
             let store = storage.collaborative_objects();
-            let objects = store.retrieve_objects(&project_urn, &TYPENAME).unwrap();
+            let objects = store
+                .retrieve_objects(&args.project_urn, &TYPENAME)
+                .unwrap();
             for object in objects {
                 let issue: Result<Issue, _> = object.history().try_into();
                 match issue {
@@ -214,6 +208,15 @@ fn main() {
                     }
                 }
             }
+        }
+        Command::ChangeGraph(ChangeGraph { issue_id }) => {
+            let store = storage.collaborative_objects();
+            println!(
+                "{}",
+                store
+                    .changegraph_dotviz_for_object(&args.project_urn, &TYPENAME, &issue_id)
+                    .unwrap()
+            )
         }
     }
 }
@@ -281,7 +284,7 @@ struct Issue {
 
 #[derive(serde::Deserialize)]
 struct Comment {
-    text: String,
+    comment: String,
     author: String,
 }
 

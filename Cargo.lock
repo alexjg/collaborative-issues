@@ -149,6 +149,7 @@ checksum = "cdb031dd78e28731d87d56cc8ffef4a8f36ca26c38fe2de700543e627f8a464a"
 [[package]]
 name = "automerge"
 version = "0.0.2"
+source = "git+https://github.com/automerge/automerge-rs.git?branch=main#28459f868f476b12938dfb1862f9a96b0fc3ee45"
 dependencies = [
  "automerge-backend",
  "automerge-frontend",
@@ -161,6 +162,7 @@ dependencies = [
 [[package]]
 name = "automerge-backend"
 version = "0.0.1"
+source = "git+https://github.com/automerge/automerge-rs.git?branch=main#28459f868f476b12938dfb1862f9a96b0fc3ee45"
 dependencies = [
  "automerge-protocol",
  "flate2",
@@ -184,6 +186,7 @@ dependencies = [
 [[package]]
 name = "automerge-frontend"
 version = "0.1.0"
+source = "git+https://github.com/automerge/automerge-rs.git?branch=main#28459f868f476b12938dfb1862f9a96b0fc3ee45"
 dependencies = [
  "automerge-protocol",
  "futures",
@@ -200,6 +203,7 @@ dependencies = [
 [[package]]
 name = "automerge-protocol"
 version = "0.1.0"
+source = "git+https://github.com/automerge/automerge-rs.git?branch=main#28459f868f476b12938dfb1862f9a96b0fc3ee45"
 dependencies = [
  "hex",
  "serde",
@@ -1144,6 +1148,7 @@ dependencies = [
 [[package]]
 name = "librad"
 version = "0.1.0"
+source = "git+https://github.com/radicle-dev/radicle-link.git?branch=alexjg/collab-objects#736dc54d0bd42d8046d5c75d26fc8cb32dfeb105"
 dependencies = [
  "async-stream",
  "async-trait",
@@ -1716,6 +1721,7 @@ dependencies = [
 [[package]]
 name = "radicle-data"
 version = "0.1.0"
+source = "git+https://github.com/radicle-dev/radicle-link.git?branch=alexjg/collab-objects#736dc54d0bd42d8046d5c75d26fc8cb32dfeb105"
 dependencies = [
  "minicbor",
  "nonempty",
@@ -1726,6 +1732,7 @@ dependencies = [
 [[package]]
 name = "radicle-git-ext"
 version = "0.1.0"
+source = "git+https://github.com/radicle-dev/radicle-link.git?branch=alexjg/collab-objects#736dc54d0bd42d8046d5c75d26fc8cb32dfeb105"
 dependencies = [
  "git2",
  "minicbor",
@@ -1761,6 +1768,7 @@ dependencies = [
 [[package]]
 name = "radicle-macros"
 version = "0.1.0"
+source = "git+https://github.com/radicle-dev/radicle-link.git?branch=alexjg/collab-objects#736dc54d0bd42d8046d5c75d26fc8cb32dfeb105"
 dependencies = [
  "quote",
  "radicle-git-ext",
@@ -1770,6 +1778,7 @@ dependencies = [
 [[package]]
 name = "radicle-std-ext"
 version = "0.1.0"
+source = "git+https://github.com/radicle-dev/radicle-link.git?branch=alexjg/collab-objects#736dc54d0bd42d8046d5c75d26fc8cb32dfeb105"
 
 [[package]]
 name = "rand"
