@@ -1,12 +1,9 @@
 [package]
 name = "issues"
 version = "0.1.0"
-authors = ["The Radicle Team <dev@radicle.xyz>"]
+authors = ["Alex Good <alex@memoryandthought.me>"]
 edition = "2018"
 license = "GPL-3.0-or-later"
-
-[lib]
-test = false
 
 [dependencies]
 argh = "0.1"
