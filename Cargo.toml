@@ -18,9 +18,15 @@ version = "1.0"
 features = ["derive"]
 
 [dependencies.librad]
+#path = "../radicle-link/librad"
 git = "https://github.com/radicle-dev/radicle-link.git"
-branch = "alexjg/collab-objects"
+rev = "01ad3f4d1fa8506fce13521554428680214b5ec0"
 
 [dependencies.automerge]
 git = "https://github.com/automerge/automerge-rs.git"
 branch = "main"
+
+[patch.crates-io.thrussh-encoding]
+git = "https://github.com/FintanH/thrussh.git"
+branch = "generic-agent"
+

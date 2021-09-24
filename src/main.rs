@@ -4,14 +4,14 @@ use lazy_static::lazy_static;
 use librad::{
     collaborative_objects::{History, NewObjectSpec, ObjectId, TypeName},
     git::{identities::local, storage::Storage, Urn},
-    keys::{PublicKey, SecretKey},
+    PublicKey, SecretKey,
     profile::Profile,
-    signer::{BoxedSigner, SomeSigner},
-};
-use radicle_keystore::{
-    crypto::{self, Pwhash},
-    pinentry::Prompt,
-    FileStorage, Keystore,
+    crypto::{BoxedSigner, SomeSigner},
+    keystore::{
+        crypto::{self, Pwhash},
+        pinentry::Prompt,
+        FileStorage, Keystore,
+    }
 };
 use std::{
     convert::{TryFrom, TryInto},
@@ -106,20 +106,23 @@ fn main() {
 
     match args.command {
         Command::Create(Create { title, description }) => {
-            let store = storage.collaborative_objects();
+            let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             let author = local_id.urn();
             store
-                .create_object(NewObjectSpec {
-                    message: Some("create issue".to_string()),
-                    typename: TYPENAME.to_string(),
-                    project_urn: args.project_urn,
-                    schema_json: SCHEMA_JSON.clone(),
-                    history: initial_doc(author, title, description),
-                })
+                .create_object(
+                    &local_id,
+                    &args.project_urn,
+                    NewObjectSpec {
+                        message: Some("create issue".to_string()),
+                        typename: TYPENAME.clone(),
+                        schema_json: SCHEMA_JSON.clone(),
+                        history: initial_doc(author, title, description),
+                    },
+                )
                 .unwrap();
         }
         Command::Retrieve(Retrieve { issue_id }) => {
-            let store = storage.collaborative_objects();
+            let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             let object = store
                 .retrieve_object(&args.project_urn, &TYPENAME, &issue_id)
                 .unwrap();
@@ -140,7 +143,7 @@ fn main() {
             }
         }
         Command::AddComment(AddComment { issue_id, comment }) => {
-            let store = storage.collaborative_objects();
+            let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             let object = store
                 .retrieve_object(&args.project_urn, &TYPENAME, &issue_id)
                 .unwrap();
@@ -155,7 +158,7 @@ fn main() {
                                 let comments =
                                     d.value_at_path(&automerge::Path::root().key("comments"));
                                 let num_comments =
-                                    if let Some(automerge::Value::Sequence(comments)) = comments {
+                                    if let Some(automerge::Value::List(comments)) = comments {
                                         comments.len() as u32
                                     } else {
                                         println!("invalid issue document");
@@ -178,11 +181,14 @@ fn main() {
                         backend.apply_changes(vec![change.clone()]).unwrap();
                         store
                             .update_object(
+                                &local_id,
                                 &args.project_urn,
-                                &TYPENAME,
-                                &issue_id,
-                                History::Automerge(change.raw_bytes().to_vec()),
-                                Some("add comment".to_string()),
+                                librad::collaborative_objects::UpdateObjectSpec{
+                                    typename: TYPENAME.clone(),
+                                    object_id: issue_id,
+                                    changes: History::Automerge(change.raw_bytes().to_vec()),
+                                    message: Some("add comment".to_string()),
+                                }
                             )
                             .unwrap();
                         println!("Update complete");
@@ -193,7 +199,7 @@ fn main() {
             }
         }
         Command::List(List {}) => {
-            let store = storage.collaborative_objects();
+            let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             let objects = store
                 .retrieve_objects(&args.project_urn, &TYPENAME)
                 .unwrap();
@@ -210,12 +216,14 @@ fn main() {
             }
         }
         Command::ChangeGraph(ChangeGraph { issue_id }) => {
-            let store = storage.collaborative_objects();
+            let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             println!(
                 "{}",
                 store
-                    .changegraph_dotviz_for_object(&args.project_urn, &TYPENAME, &issue_id)
+                    .changegraph_info_for_object(&args.project_urn, &TYPENAME, &issue_id)
                     .unwrap()
+                    .unwrap()
+                    .dotviz
             )
         }
     }
@@ -227,7 +235,7 @@ fn get_signer(keys_dir: &Path) -> anyhow::Result<BoxedSigner> {
         &file,
         Pwhash::new(
             Prompt::new("please enter your Radicle password: "),
-            *crypto::KDF_PARAMS_PROD,
+            *crypto::KDF_PARAMS_TEST,
         ),
     );
     let key: SecretKey = keystore.get_key().map(|keypair| keypair.secret_key)?;
@@ -275,17 +283,17 @@ fn initial_doc(author: Urn, title: String, description: String) -> History {
 }
 
 #[derive(serde::Deserialize)]
-struct Issue {
-    title: String,
-    description: String,
-    comments: Vec<Comment>,
-    author: String,
+pub struct Issue {
+    pub title: String,
+    pub description: String,
+    pub comments: Vec<Comment>,
+    pub author: String,
 }
 
 #[derive(serde::Deserialize)]
-struct Comment {
-    comment: String,
-    author: String,
+pub struct Comment {
+    pub comment: String,
+    pub author: String,
 }
 
 impl TryFrom<&History> for Issue {
