@@ -87,7 +87,7 @@ struct ChangeGraph {
     issue_id: ObjectId,
 }
 
-const SCHEMA_JSON_BYTES: &[u8; 607] = std::include_bytes!("./schema.json");
+const SCHEMA_JSON_BYTES: &[u8; 702] = std::include_bytes!("./schema.json");
 
 lazy_static! {
     static ref TYPENAME: TypeName = FromStr::from_str("xyz.radicle.issue").unwrap();
@@ -109,7 +109,7 @@ fn main() {
             let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             let author = local_id.urn();
             store
-                .create_object(
+                .create(
                     &local_id,
                     &args.project_urn,
                     NewObjectSpec {
@@ -124,7 +124,7 @@ fn main() {
         Command::Retrieve(Retrieve { issue_id }) => {
             let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             let object = store
-                .retrieve_object(&args.project_urn, &TYPENAME, &issue_id)
+                .retrieve(&args.project_urn, &TYPENAME, &issue_id)
                 .unwrap();
             if let Some(object) = object {
                 match object.history() {
@@ -145,7 +145,7 @@ fn main() {
         Command::AddComment(AddComment { issue_id, comment }) => {
             let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             let object = store
-                .retrieve_object(&args.project_urn, &TYPENAME, &issue_id)
+                .retrieve(&args.project_urn, &TYPENAME, &issue_id)
                 .unwrap();
             if let Some(object) = object {
                 match object.history() {
@@ -180,7 +180,7 @@ fn main() {
                         let change: automerge::Change = change.into();
                         backend.apply_changes(vec![change.clone()]).unwrap();
                         store
-                            .update_object(
+                            .update(
                                 &local_id,
                                 &args.project_urn,
                                 librad::collaborative_objects::UpdateObjectSpec{
@@ -201,7 +201,7 @@ fn main() {
         Command::List(List {}) => {
             let store = storage.collaborative_objects(Some(paths.cob_cache_dir().to_path_buf()));
             let objects = store
-                .retrieve_objects(&args.project_urn, &TYPENAME)
+                .list(&args.project_urn, &TYPENAME)
                 .unwrap();
             for object in objects {
                 let issue: Result<Issue, _> = object.history().try_into();
