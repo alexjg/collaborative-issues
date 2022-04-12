@@ -8,10 +8,10 @@ license = "GPL-3.0-or-later"
 [dependencies]
 argh = "0.1"
 anyhow = "1"
-radicle-keystore = "0"
 serde_json = "1.0"
 tracing-subscriber = "0.3"
 lazy_static = "1.4"
+smol_str = "0.1.21"
 
 [dependencies.serde]
 version = "1.0"
@@ -19,14 +19,14 @@ features = ["derive"]
 
 [dependencies.librad]
 #path = "../radicle-link/librad"
-git = "https://github.com/radicle-dev/radicle-link.git"
-rev = "2afd0f77ecf2cc124fb2dc3adc88d856cf5a4e2b"
+git = "https://github.com/alexjg/radicle-link.git"
+rev = "8b7ffa08ea38646bd05d4dc49afcacdab0677605"
+
+[dependencies.lnk-clib]
+git = "https://github.com/alexjg/radicle-link.git"
+rev = "8b7ffa08ea38646bd05d4dc49afcacdab0677605"
+#path = "../radicle-link/cli/lnk-clib"
 
 [dependencies.automerge]
 git = "https://github.com/automerge/automerge-rs.git"
-branch = "main"
-
-[patch.crates-io.thrussh-encoding]
-git = "https://github.com/FintanH/thrussh.git"
-branch = "generic-agent"
-
+rev = "e72571962b51c2f0726fb534890ef3b4f7c74dfc"
